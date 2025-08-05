@@ -1,0 +1,268 @@
+import json
+def chuan_hoa_ten(ten_ts):
+    return " ".join(word.capitalize() for word in ten_ts.strip().split())
+
+def lay_danh_sach_ho_so_tu_json():
+    global danh_sach_ho_so
+    try:
+        with open("ho_so_tuyen_sinh.json", "r", encoding="utf-8") as file:
+            du_lieu = json.load(file)
+            danh_sach_ho_so = {}
+            for hs in du_lieu:
+                ma_hs = hs["ma_hs"]
+                danh_sach_ho_so[ma_hs] = {
+                    "ma_hs": ma_hs,
+                    "ten": chuan_hoa_ten(hs["ten"]),
+                      "sdt": hs["sdt"],
+                    "diem": float(hs["diem"]),
+                    "ket_qua": hs["ket_qua"]
+                }
+            print("--- Đã tải danh sách hồ sơ từ JSON thành công. ---")
+    except FileNotFoundError:
+        print("--- File không tồn tại. Đang khởi tạo danh sách rỗng. ---")
+        danh_sach_ho_so = {}
+# Khởi tạo danh sách hồ sơ
+danh_sach_ho_so = {}
+
+def them_ho_so():
+    so_luong = int(input("Nhập số lượng hồ sơ cần thêm: "))
+    for i in range(so_luong):
+        print(f"\n--- Nhập thông tin hồ sơ thứ {i + 1} ---")
+        ma_hs = input("Nhập mã hồ sơ: ")
+        while ma_hs in danh_sach_ho_so:
+            ma_hs = input(f"--- ĐÃ TỒN TẠI MÃ HỒ SƠ {ma_hs} ---\nVui lòng nhập lại: ")
+        ten = input("Nhập tên thí sinh: ")
+        ten = chuan_hoa_ten(ten)
+        sdt = input("Nhập số điện thoại: ")
+        diem = float(input("Nhập điểm xét tuyển (0-30): "))
+        while diem < 0 or diem > 30:
+            diem = float(input("--- Điểm không hợp lệ! Nhập lại (0-30): "))
+        ket_qua = "Đậu" if diem >= 15 else "Rớt"
+        danh_sach_ho_so[ma_hs] = {
+            "ma_hs": ma_hs,
+            "ten": ten,
+            "sdt": sdt,
+            "diem": diem,
+            "ket_qua": ket_qua
+        }
+    print(f"--- ĐÃ THÊM {so_luong} HỒ SƠ ---")
+
+def hien_thi_ho_so():
+    if not danh_sach_ho_so:
+        print("--- DANH SÁCH HỒ SƠ TRỐNG ---")
+        return
+    print(f"{'Mã hồ sơ':<15}{'Tên':<25}{'SĐT':<15}{'Điểm':<10}{'Kết quả':<10}")
+    print("-" * 70)
+    for hs in danh_sach_ho_so.values():
+        print(f"{hs['ma_hs']:<15}{hs['ten']:<25}{hs['sdt']:<15}{hs['diem']:<10}{hs['ket_qua']:<10}")
+
+def tim_theo_ma_hs():
+    ma = input("Nhập mã hồ sơ cần tìm: ")
+    if ma in danh_sach_ho_so:
+        hs = danh_sach_ho_so[ma]
+        print(f"--- Tìm thấy: {hs['ten']}, SĐT: {hs['sdt']}, Điểm: {hs['diem']}, Kết quả: {hs['ket_qua']} ---")
+    else:
+        print("--- KHÔNG TÌM THẤY MÃ HỒ SƠ ---")
+
+def tim_theo_ten():
+    ten = input("Nhập tên cần tìm: ")
+    ten = chuan_hoa_ten(ten)
+    found = False
+    for hs in danh_sach_ho_so.values():
+        if hs["ten"] == ten:
+            print(f"{hs['ma_hs']} | {hs['ten']} | {hs['sdt']} | {hs['diem']} | {hs['ket_qua']}")
+            found = True
+    if not found:
+        print(f"--- KHÔNG TÌM THẤY THÍ SINH TÊN {ten} ---")
+
+def sua_ho_so():
+    ma = input("Nhập mã hồ sơ cần sửa: ")
+    if ma in danh_sach_ho_so:
+        hs = danh_sach_ho_so[ma]
+        ma_moi = input("Nhập mã hồ sơ mới: ")
+        if ma_moi != ma and ma_moi in danh_sach_ho_so:
+            print("--- Mã mới đã tồn tại ---")
+            return
+        ten = input("Tên mới: ")
+        ten = chuan_hoa_ten(ten)
+        sdt = input("SĐT mới: ")
+        diem = float(input("Điểm mới (0-30): "))
+        ket_qua = "Đậu" if diem >= 15 else "Rớt"
+        del danh_sach_ho_so[ma]
+        danh_sach_ho_so[ma_moi] = {
+            "ma_hs": ma_moi,
+            "ten": ten,
+            "sdt": sdt,
+            "diem": diem,
+            "ket_qua": ket_qua
+        }
+        print("--- ĐÃ CẬP NHẬT ---")
+    else:
+        print("--- KHÔNG TÌM THẤY HỒ SƠ ---")
+
+def xoa_ho_so():
+    ma = input("Nhập mã hồ sơ cần xóa: ")
+    if ma in danh_sach_ho_so:
+        xac_nhan = input("Bạn chắc chắn muốn xóa? Nhập '1' để xác nhận: ")
+        if xac_nhan == '1':
+            del danh_sach_ho_so[ma]
+            print("--- ĐÃ XÓA ---")
+    else:
+        print("--- KHÔNG TÌM THẤY HỒ SƠ ---")
+
+def diem_trung_binh():
+    if not danh_sach_ho_so:
+        print("--- DANH SÁCH TRỐNG ---")
+        return
+    diem_tb = sum(hs['diem'] for hs in danh_sach_ho_so.values()) / len(danh_sach_ho_so)
+    print(f"--- Điểm trung bình: {diem_tb:.2f} ---")
+
+def loc_diem():
+    min_d = float(input("Từ điểm: "))
+    max_d = float(input("Đến điểm: "))
+    found = False
+    for hs in danh_sach_ho_so.values():
+        if min_d <= hs['diem'] <= max_d:
+            print(f"{hs['ma_hs']} | {hs['ten']} | {hs['diem']} | {hs['ket_qua']}")
+            found = True
+    if not found:
+        print("--- Không có hồ sơ nào trong khoảng điểm này ---")
+
+def hien_thi_trung_tuyen(ket_qua='Đậu'):
+    print(f"--- DANH SÁCH THÍ SINH {ket_qua.upper()} ---")
+    for hs in danh_sach_ho_so.values():
+        if hs['ket_qua'] == ket_qua:
+            print(f"{hs['ma_hs']} | {hs['ten']} | {hs['diem']}")
+
+def tim_thi_sinh_diem_cao_nhat():
+    if not danh_sach_ho_so:
+        print("--- DANH SÁCH RỖNG ---")
+        return
+    max_diem = max(hs["diem"] for hs in danh_sach_ho_so.values())
+    print(f"--- Thí sinh có điểm cao nhất ({max_diem}) ---")
+    for hs in danh_sach_ho_so.values():
+        if hs["diem"] == max_diem:
+            print(f"{hs['ma_hs']} | {hs['ten']} | {hs['diem']} | {hs['ket_qua']}")
+
+def tim_thi_sinh_diem_thap_nhat():
+    if not danh_sach_ho_so:
+        print("--- DANH SÁCH RỖNG ---")
+        return
+    min_diem = min(hs["diem"] for hs in danh_sach_ho_so.values())
+    print(f"--- Thí sinh có điểm thấp nhất ({min_diem}) ---")
+    for hs in danh_sach_ho_so.values():
+        if hs["diem"] == min_diem:
+            print(f"{hs['ma_hs']} | {hs['ten']} | {hs['diem']} | {hs['ket_qua']}")
+
+def dem_so_luong():
+    print(f"--- Số lượng hồ sơ: {len(danh_sach_ho_so)} ---")
+
+def diem_tong():
+    if not danh_sach_ho_so:
+        print("--- DANH SÁCH RỖNG ---")
+        return
+    tong = sum(hs["diem"] for hs in danh_sach_ho_so.values())
+    print(f"--- Tổng điểm của tất cả thí sinh: {tong:.2f} ---")
+
+def sap_xep_theo_diem_tang_dan():
+    if not danh_sach_ho_so:
+        print("--- DANH SÁCH RỖNG ---")
+        return
+    sorted_list = sorted(danh_sach_ho_so.values(), key=lambda hs: hs["diem"])
+    print("--- Danh sách sắp xếp theo điểm tăng dần ---")
+    for hs in sorted_list:
+        print(f"{hs['ma_hs']} | {hs['ten']} | {hs['diem']}")
+
+def sap_xep_theo_diem_giam_dan():
+    if not danh_sach_ho_so:
+        print("--- DANH SÁCH RỖNG ---")
+        return
+    sorted_list = sorted(danh_sach_ho_so.values(), key=lambda hs: hs["diem"], reverse=True)
+    print("--- Danh sách sắp xếp theo điểm giảm dần ---")
+    for hs in sorted_list:
+        print(f"{hs['ma_hs']} | {hs['ten']} | {hs['diem']}")
+
+def luu_vao_file_json():
+    try:
+        with open("ho_so_tuyen_sinh.json", "w", encoding="utf-8") as file:
+            json.dump(list(danh_sach_ho_so.values()), file, ensure_ascii=False, indent=4)
+        print("--- Đã lưu danh sách hồ sơ vào file JSON ---")
+    except Exception as e:
+        print(f"Lỗi khi lưu file: {e}")
+
+def xoa_toan_bo_danh_sach():
+    xac_nhan = input(" Bạn chắc chắn muốn xóa toàn bộ danh sách? Nhập '1' để xác nhận: ")
+    if xac_nhan == '1':
+        danh_sach_ho_so.clear()
+        print("--- ĐÃ XÓA TOÀN BỘ DANH SÁCH ---")
+
+if __name__ == "__main__":
+    while True:
+        print("\n========== MENU QUẢN LÝ TUYỂN SINH ==========")
+        print("1.  Đọc danh sách hồ sơ từ file JSON")
+        print("2.  Thêm hồ sơ")
+        print("3.  Hiển thị danh sách hồ sơ")
+        print("4.  Tìm hồ sơ theo mã")
+        print("5.  Tìm hồ sơ theo tên")
+        print("6.  Sửa thông tin hồ sơ")
+        print("7.  Xóa hồ sơ theo mã")
+        print("8.  Tính điểm trung bình")
+        print("9.  Lọc hồ sơ theo khoảng điểm")
+        print("10. Danh sách thí sinh ĐẬU")
+        print("11. Danh sách thí sinh RỚT")
+        print("12. Tìm thí sinh có điểm cao nhất")
+        print("13. Tìm thí sinh có điểm thấp nhất")
+        print("14. Đếm số lượng thí sinh")
+        print("15. Tính tổng điểm toàn bộ hồ sơ")
+        print("16. Bảng xếp hạng theo điểm")
+        print("17. Sắp xếp danh sách theo điểm giảm dần")
+        print("18. Xuất danh sách ra file CSV")
+        print("19. Xóa toàn bộ danh sách hồ sơ")
+        print("20. Thoát chương trình")
+        print("============================================")
+        
+        chon = input("Nhập lựa chọn của bạn (1-20): ")
+        
+        if chon == "1":
+            lay_danh_sach_ho_so_tu_json()
+        elif chon == "2":
+            them_ho_so()
+        elif chon == "3":
+            hien_thi_ho_so()
+        elif chon == "4":
+            tim_theo_ma_hs()
+        elif chon == "5":
+            tim_theo_ten()
+        elif chon == "6":
+            sua_ho_so()
+        elif chon == "7":
+            xoa_ho_so()
+        elif chon == "8":
+            diem_trung_binh()
+        elif chon == "9":
+            loc_diem()
+        elif chon == "10":
+            hien_thi_trung_tuyen("Đậu")
+        elif chon == "11":
+            hien_thi_trung_tuyen("Rớt")
+        elif chon == "12":
+            tim_thi_sinh_diem_cao_nhat()
+        elif chon == "13":
+            tim_thi_sinh_diem_thap_nhat()
+        elif chon == "14":
+            dem_so_luong()
+        elif chon == "15":
+            diem_tong()
+        elif chon == "16":
+            sap_xep_theo_diem_tang_dan()
+        elif chon == "17":
+            sap_xep_theo_diem_giam_dan()
+        elif chon == "18":
+            luu_vao_file_json()
+        elif chon == "19":
+            xoa_toan_bo_danh_sach()
+        elif chon == "20":
+            print("Đã thoát chương trình!")
+            break
+        else:
+            print("Lựa chọn không hợp lệ. Vui lòng chọn lại.")
